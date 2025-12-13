@@ -1,28 +1,24 @@
-server:
-  port: 9091
-
 spring:
-  sql:
-    init:
-      mode: always
-  datasource:
-    driverClassName: org.postgresql.Driver
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:6542/stats_db}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: true
-    "properties.hibernate.format_sql": true
+  application:
+    name: stats-service
+  config:
+    import: "configserver:"
 
-  liquibase:
-    change-log: classpath:/db/changelog/db.changelog-master.yaml
-    clear-checksums: true
-logging:
-  level:
-    "org.zalando.logbook": TRACE
-    "org.springframework.orm.jpa": INFO
-    "org.springframework.orm.jpa.JpaTransactionManager": DEBUG
-    "org.springframework.transaction": INFO
-    "org.springframework.transaction.interceptor": TRACE
+  cloud:
+    config:
+      fail-fast: true
+      discovery:
+        enabled: true
+        service-id: config-server
+      retry:
+        useRandomPolicy: true
+        max-interval: 6000
+
+eureka:
+  instance:
+    instanceId: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+  client:
+    healthcheck:
+      enabled: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
