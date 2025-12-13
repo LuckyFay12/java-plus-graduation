@@ -1,5 +1,6 @@
 package ru.practicum.ewm.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Builder
@@ -7,7 +8,12 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ViewStatDto {
+    @NotBlank
     private String app;
+
+    @NotBlank
     private String uri;
-    private Long hits;
+
+    @NotBlank
+    private long hits;
 }

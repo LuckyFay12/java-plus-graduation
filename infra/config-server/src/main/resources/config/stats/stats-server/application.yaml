@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: stats-server
+  sql:
+    init:
+      mode: always
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:6542/stats_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    "properties.hibernate.format_sql": true
+
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    clear-checksums: true
+
+logging:
+  level:
+    "org.springframework.web": DEBUG
+    "org.springframework.web.servlet": DEBUG
+    "org.springframework.web.filter": DEBUG
+    "ru.practicum": INFO
+    "org.zalando.logbook": TRACE
+    "org.springframework.orm.jpa": INFO
+    "org.springframework.orm.jpa.JpaTransactionManager": DEBUG
+    "org.springframework.transaction": INFO
+    "org.springframework.transaction.interceptor": TRACE
+
+server:
+  port: 0
+
+  secondary:
+    port: 9090
