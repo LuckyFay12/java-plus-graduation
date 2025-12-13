@@ -11,9 +11,9 @@ import org.springframework.context.annotation.Configuration;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan
-public class StatService {
+public class StatsServer {
     public static void main(String[] args) {
-        SpringApplication.run(StatService.class, args);
+        SpringApplication.run(StatsServer.class, args);
     }
 
     @Configuration

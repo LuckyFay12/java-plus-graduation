@@ -20,8 +20,8 @@ spring:
       mode: always
       schema-locations: classpath:schema.sql
 
-  stats-service:
-    name: stats-service
+  stats-server:
+    name: stats-server
 
 logging:
   level:

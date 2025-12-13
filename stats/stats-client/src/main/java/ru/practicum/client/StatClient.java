@@ -34,7 +34,7 @@ public class StatClient {
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    @Value("${stats-service.name:stats-service}")  //в main-service
+    @Value("${stats-server.name:stats-server}")  //в main-service
     private String statsServiceId;
 
     public StatClient(DiscoveryClient discoveryClient) {
@@ -55,7 +55,7 @@ public class StatClient {
         return template;
     }
 
-    private ServiceInstance getStatsServiceInstance() {
+    private ServiceInstance getStatsServerInstance() {
         return retryTemplate.execute(context -> {
             log.debug("Попытка #{} получить экземпляр сервиса {}",
                     context.getRetryCount() + 1, statsServiceId);
@@ -74,7 +74,7 @@ public class StatClient {
     }
 
     private URI buildStatsServiceUri(String path) {
-        ServiceInstance instance = getStatsServiceInstance();
+        ServiceInstance instance = getStatsServerInstance();
         return UriComponentsBuilder.newInstance()
                 .scheme("http")
                 .host(instance.getHost())
