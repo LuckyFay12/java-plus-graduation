@@ -15,7 +15,7 @@ spring:
         max-interval: 6000
     openfeign:
       circuitbreaker:
-        enabled: false
+        enabled: true
 
 eureka:
   instance:
