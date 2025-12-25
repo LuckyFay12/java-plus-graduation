@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatClient;
 import ru.practicum.dto.EventFullDto;
 import ru.practicum.dto.EventShortDto;
@@ -283,6 +284,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EventFullDto getById(Long eventId, HttpServletRequest httpServletRequest) {
         Event event = getById(eventId);
         if (event.getState() != EventState.PUBLISHED) {
@@ -314,6 +316,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Event getById(Long eventId) {
         return findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие id = %d не найдено".formatted(eventId)));
