@@ -44,7 +44,6 @@ public class RequestServiceImpl implements RequestService {
         return findById(requestId).orElseThrow(() -> new NotFoundException("Запрос с id = %d не найден".formatted(requestId)));
     }
 
-    @Override
     public ParticipationRequestDto createRequest(Long userId, Long eventId) {
         checkExistsUser(userId);
 
