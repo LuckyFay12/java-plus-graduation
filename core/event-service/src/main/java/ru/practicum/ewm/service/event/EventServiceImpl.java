@@ -9,14 +9,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatClient;
 import ru.practicum.dto.EventFullDto;
 import ru.practicum.dto.EventShortDto;
 import ru.practicum.dto.UserShortDto;
 import ru.practicum.enums.EventState;
-import ru.practicum.ewm.client.CommentClient;
-import ru.practicum.ewm.client.UserClient;
+import ru.practicum.client.CommentClient;
+import ru.practicum.client.UserClient;
 import ru.practicum.ewm.dto.EndpointHit;
 import ru.practicum.ewm.dto.StatRequest;
 import ru.practicum.ewm.dto.ViewStatDto;
@@ -43,7 +42,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
@@ -83,7 +81,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional
     public EventFullDto update(UpdateEventAdminRequest request, Long eventId) {
         Event event = eventRepository.findById(eventId).orElseThrow(() ->
                 new NotFoundException("Событие с id = %d не найдено".formatted(eventId)));
@@ -152,7 +149,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional
     public EventFullDto create(NewEventDto newEventDto, Long userId) {
         if (newEventDto.getEventDate().isBefore(LocalDateTime.now())) {
             throw new ValidationException("Указана дата начала события в прошлом");
@@ -179,7 +175,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional
     public EventFullDto update(UpdateEventUserRequest request, Long userId, Long eventId) {
         Event event = checkUpdateEvent(userId, eventId);
         if (event.getState() == EventState.PUBLISHED) {
@@ -332,7 +327,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional
     public void incrementConfirmedRequests(Long eventId, int count) {
         int updated = eventRepository.incrementConfirmedRequestsNative(eventId, count);
         if (updated == 0) {

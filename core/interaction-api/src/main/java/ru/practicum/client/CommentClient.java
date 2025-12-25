@@ -1,4 +1,4 @@
-package ru.practicum.ewm.client;
+package ru.practicum.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;

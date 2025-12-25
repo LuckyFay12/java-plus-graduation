@@ -25,7 +25,6 @@ import java.util.Optional;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class RequestServiceImpl implements RequestService {
 
     private final RequestRepository requestRepository;
@@ -34,17 +33,18 @@ public class RequestServiceImpl implements RequestService {
     private final EventClient eventClient;
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<ParticipationRequest> findById(Long requestId) {
         return requestRepository.findById(requestId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ParticipationRequest getById(Long requestId) {
         return findById(requestId).orElseThrow(() -> new NotFoundException("Запрос с id = %d не найден".formatted(requestId)));
     }
 
     @Override
-    @Transactional
     public ParticipationRequestDto createRequest(Long userId, Long eventId) {
         checkExistsUser(userId);
 
@@ -138,7 +138,6 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    @Transactional
     public EventRequestStatusUpdateResult updateRequest(EventRequestStatusUpdateRequest requestDto, Long userId,
                                                         Long eventId) {
         EventFullDto event = checkUpdateEvent(userId, eventId);
@@ -180,7 +179,6 @@ public class RequestServiceImpl implements RequestService {
                 .toList();
         return new EventRequestStatusUpdateResult(confirmedList, regectedList);
     }
-
 
     private EventState getEventStateSafe(String state) {
         if (state == null) {

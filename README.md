@@ -23,8 +23,8 @@
 ### Особенности:
 
 - Каждый сервис — **отдельное Spring Boot приложение**
-- Сервисы User, Event, Request, Comment имеют **общую базу данных** (PostgreSQL)
-- Stats Server использует **отдельную БД**
+- Сервисы User, Event, Request, Comment используют **один экземпляр PostgreSQL**, но каждый работает со своей базой данных
+- Stats Server использует **отдельный экземпляр PostgreSQL**
 - Межсервисная коммуникация через **REST API (OpenFeign)**
 - Использование **Circuit Breaker (Resilience4j)** для отказоустойчивости
 

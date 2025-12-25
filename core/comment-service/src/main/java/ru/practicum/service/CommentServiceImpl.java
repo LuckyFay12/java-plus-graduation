@@ -22,7 +22,6 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
@@ -30,17 +29,20 @@ public class CommentServiceImpl implements CommentService {
     private final EventClient eventClient;
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Comment> findById(Long commentId) {
         return commentRepository.findById(commentId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Comment getById(Long commentId) {
         return findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Комментарий с id = %d не найден".formatted(commentId)));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CommentDto getCommentById(Long commentId) {
         return commentMapper.toCommentDto(getById(commentId));
     }
@@ -57,7 +59,6 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    @Transactional
     public CommentDto createComment(Long userId, Long eventId, NewCommentDto newCommentDto) {
         UserShortDto user = userClient.getUserById(userId);
         EventFullDto event = eventClient.getByEventId(eventId);
@@ -95,7 +96,6 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    @Transactional
     public CommentDto updateCommentByUser(Long userId, Long commentId, UpdateCommentRequest request) {
         checkExistsUser(userId);
         Comment comment = getByIdAndAuthorId(commentId, userId);
@@ -115,7 +115,6 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    @Transactional
     public void deleteCommentByUser(Long userId, Long commentId) {
         checkExistsUser(userId);
         Comment comment = getByIdAndAuthorId(commentId, userId);
@@ -167,6 +166,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CommentDto> getCommentsForModeration(Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
         List<Comment> comments = commentRepository.findByStatus(CommentStatus.PENDING, pageable);
@@ -177,6 +177,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Long getCountPublishedCommentsByEventId(Long eventId) {
         return commentRepository.countPublishedCommentsByEventId(eventId);
     }

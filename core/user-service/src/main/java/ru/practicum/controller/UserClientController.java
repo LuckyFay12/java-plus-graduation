@@ -3,6 +3,7 @@ package ru.practicum.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.client.UserClient;
 import ru.practicum.dto.UserShortDto;
 import ru.practicum.service.UserService;
 
@@ -12,17 +13,17 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/users")
-public class UserClientController {
+public class UserClientController implements UserClient {
 
     private final UserService userService;
 
-    @GetMapping
-    public List<UserShortDto> getUsersByIds(@RequestParam List<Long> ids) {
+    @Override
+    public List<UserShortDto> getUsersByIds(List<Long> ids) {
         return userService.getUsersByIds(ids);
     }
 
-    @GetMapping("/{userId}")
-    public UserShortDto getUserById(@PathVariable Long userId) {
+    @Override
+    public UserShortDto getUserById(Long userId) {
         return userService.getUserById(userId);
     }
 }
