@@ -82,6 +82,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto update(UpdateEventAdminRequest request, Long eventId) {
         Event event = eventRepository.findById(eventId).orElseThrow(() ->
                 new NotFoundException("Событие с id = %d не найдено".formatted(eventId)));
@@ -150,6 +151,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto create(NewEventDto newEventDto, Long userId) {
         if (newEventDto.getEventDate().isBefore(LocalDateTime.now())) {
             throw new ValidationException("Указана дата начала события в прошлом");
@@ -176,6 +178,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto update(UpdateEventUserRequest request, Long userId, Long eventId) {
         Event event = checkUpdateEvent(userId, eventId);
         if (event.getState() == EventState.PUBLISHED) {
