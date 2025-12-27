@@ -5,10 +5,9 @@ spring:
     init:
       mode: always
   datasource:
-    driverClassName: org.postgresql.Driver
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:6542/stats_db}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    url: jdbc:postgresql://localhost:5433/stats_db
+    username: postgres
+    password: postgres
   jpa:
     hibernate:
       ddl-auto: none
@@ -21,15 +20,11 @@ spring:
 
 logging:
   level:
-    "org.springframework.web": DEBUG
-    "org.springframework.web.servlet": DEBUG
-    "org.springframework.web.filter": DEBUG
     "ru.practicum": INFO
-    "org.zalando.logbook": TRACE
-    "org.springframework.orm.jpa": INFO
-    "org.springframework.orm.jpa.JpaTransactionManager": DEBUG
-    "org.springframework.transaction": INFO
-    "org.springframework.transaction.interceptor": TRACE
+    "org.springframework.web": WARN
+    "org.hibernate.SQL": DEBUG
+    "org.springframework.transaction": DEBUG
+    ROOT: WARN
 
 server:
   port: 0

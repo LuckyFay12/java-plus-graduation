@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: request-service
+  config:
+    import: "configserver:"
+
+  cloud:
+    config:
+      fail-fast: true
+      discovery:
+        enabled: true
+        service-id: config-server
+      retry:
+        useRandomPolicy: true
+        max-interval: 6000
+    openfeign:
+      circuitbreaker:
+        enabled: false
+
+eureka:
+  instance:
+    instanceId: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+  client:
+    healthcheck:
+      enabled: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+feign:
+  circuitbreaker:
+    enabled: true
+  client:
+    config:
+      default:
+        connect-timeout: 1000
+        read-timeout: 2000

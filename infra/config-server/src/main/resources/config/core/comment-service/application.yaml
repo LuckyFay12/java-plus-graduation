@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: comment-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/comment_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      defer-datasource-initialization: true
+      hibernate:
+        format_sql: true
+        show_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+logging:
+  level:
+    "ru.practicum": INFO
+    "org.springframework.web": WARN
+    "org.hibernate.SQL": DEBUG
+    "org.springframework.transaction": DEBUG
+    ROOT: WARN
+
+server:
+  port: 0
