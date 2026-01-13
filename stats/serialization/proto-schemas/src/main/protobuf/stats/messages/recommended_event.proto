@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package stats.message.recommendation;
+
+option java_multiple_files = true;
+option java_package = "ru.practicum.grpc.stats.recommendation";
+
+message RecommendedEventProto {
+  int64 event_id = 1; // идентификатор рекомендуемого мероприятия
+  double score = 2; // либо предсказанная оценка, либо коэффициент сходства,
+                    // либо сумма весов действий с указанным мероприятием
+}

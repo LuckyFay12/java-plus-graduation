@@ -1,0 +1,33 @@
+package ru.practicum.stats.analyzer.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.Instant;
+
+@Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Table(name = "interactions")
+public class Interaction {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long Id;
+
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @Column(name = "event_id", nullable = false)
+    private Long eventId;
+
+    @NotNull
+    private Double rating;
+
+    @Column(name = "ts", nullable = false)
+    private Instant timestamp;
+}

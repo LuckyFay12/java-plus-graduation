@@ -1,5 +1,6 @@
 package ru.practicum.ewm.service.event;
 
+import com.google.protobuf.Timestamp;
 import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -10,16 +11,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.client.StatClient;
+import ru.practicum.client.*;
 import ru.practicum.dto.EventFullDto;
 import ru.practicum.dto.EventShortDto;
 import ru.practicum.dto.UserShortDto;
 import ru.practicum.enums.EventState;
-import ru.practicum.client.CommentClient;
-import ru.practicum.client.UserClient;
-import ru.practicum.ewm.dto.EndpointHit;
-import ru.practicum.ewm.dto.StatRequest;
-import ru.practicum.ewm.dto.ViewStatDto;
 import ru.practicum.ewm.dto.event.*;
 import ru.practicum.ewm.entity.category.Category;
 import ru.practicum.ewm.entity.event.*;
@@ -32,13 +28,18 @@ import ru.practicum.ewm.service.category.CategoryService;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
+import ru.practicum.grpc.stats.action.ActionTypeProto;
+import ru.practicum.grpc.stats.action.UserActionProto;
+import ru.practicum.grpc.stats.recommendation.RecommendedEventProto;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -52,8 +53,10 @@ public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
     private final LocationMapper locationMapper;
     private final UserClient userClient;
-    private final StatClient statClient;
+    private final CollectorClient collectorClient;
+    private final RecommendationsClient recommendationsClient;
     private final CommentClient commentClient;
+    private final RequestClient requestClient;
 
     @Override
     public List<EventFullDto> getAll(EventAdminFilter adminFilter, Integer from, Integer size) {
@@ -121,7 +124,6 @@ public class EventServiceImpl implements EventService {
         return toEventFullDtoWithInitiator(savedEvent);
     }
 
-
     private void setState(Event event, UpdateEventAdminRequest request) {
         if (request.getStateAction() != null) {
             if (request.getStateAction() == StateAction.PUBLISH_EVENT) {
@@ -151,7 +153,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional
     public EventFullDto create(NewEventDto newEventDto, Long userId) {
         if (newEventDto.getEventDate().isBefore(LocalDateTime.now())) {
             throw new ValidationException("Указана дата начала события в прошлом");
@@ -277,7 +278,6 @@ public class EventServiceImpl implements EventService {
         Sort sort = Optional.ofNullable(publicFilter.getSort())
                 .map(s -> Sort.by(Sort.Direction.DESC, s == EventSort.EVENT_DATE ? "eventDate" : "views"))
                 .orElse(Sort.unsorted());
-        hit(httpServletRequest);
 
         List<Event> events = eventRepository.findAll(specification,
                         PageRequest.of(from / size, size).withSort(sort))
@@ -287,47 +287,36 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public EventFullDto getById(Long eventId, HttpServletRequest httpServletRequest) {
+    public EventFullDto getById(Long eventId, Long userId, HttpServletRequest httpServletRequest) {
         Event event = getById(eventId);
         if (event.getState() != EventState.PUBLISHED) {
             throw new NotFoundException("getById: Событие id = %d не опубликовано".formatted(eventId));
         }
-        hit(httpServletRequest);
-        StatRequest statsRequest = StatRequest.builder()
-                .start(event.getPublishedOn())
-                .end(LocalDateTime.now())
-                .uris(List.of("/events/" + eventId))
-                .unique(true)
-                .build();
-        List<ViewStatDto> stats = statClient.getStats(statsRequest);
-        log.info("Метод getById, длина списка stats: {}", stats.size());
-        Long views = stats.isEmpty() ? 0L : stats.getFirst().getHits();
-        event.setViews(views);
-        log.info("Метод getById, количество сохраняемых просмотров: {}", views);
+        sendViewAction(userId, eventId);
+
+        double rating = getEventRating(eventId);
+        event.setRating(rating);
+
+        log.info("Метод getById, рейтинг события {}: {}", eventId, rating);
+
+        Long commentsCount = commentClient.getCountPublishedCommentsByEventId(eventId);
 
         EventFullDto eventFullDto = toEventFullDtoWithInitiator(event);
-        Long commentsCount = commentClient.getCountPublishedCommentsByEventId(eventId);
         eventFullDto.setCommentsCount(commentsCount);
+        eventFullDto.setRating(rating);
 
         return eventFullDto;
     }
 
     @Override
-    public Optional<Event> findById(Long eventId) {
-        return eventRepository.findById(eventId);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Event getById(Long eventId) {
-        return findById(eventId)
+        return eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие id = %d не найдено".formatted(eventId)));
     }
 
     @Override
     public EventFullDto getByEventId(Long eventId) {
-        Event event = findById(eventId)
+        Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие id = %d не найдено".formatted(eventId)));
         return toEventFullDtoWithInitiator(event);
     }
@@ -337,6 +326,91 @@ public class EventServiceImpl implements EventService {
         int updated = eventRepository.incrementConfirmedRequestsNative(eventId, count);
         if (updated == 0) {
             throw new NotFoundException("Событие не найдено: " + eventId);
+        }
+    }
+
+    @Override
+    public List<EventShortDto> getRecommendations(long userId, int maxResult) {
+        return recommendationsClient.getRecommendationsForUser(userId, maxResult)
+                .map(recommendedEventProto -> {
+                    Event event = getById(recommendedEventProto.getEventId());
+                    EventShortDto dto = eventMapper.toEventShortDto(event);
+                    dto.setRating(recommendedEventProto.getScore());
+
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void addLike(Long eventId, long userId) {
+        checkExistsUser(userId);
+        Event event = getById(eventId);
+
+        if (event.getState() != EventState.PUBLISHED) {
+            throw new ValidationException("Нельзя лайкнуть неопубликованное событие");
+        }
+        if (!requestClient.existsByRequesterIdAndEventId(userId, eventId)) {
+            throw new ValidationException("Нельзя лайкнуть событие, которое не посещал");
+        }
+        sendLikeAction(userId, eventId);
+    }
+
+    private void sendLikeAction(long userId, Long eventId) {
+        try {
+            UserActionProto userAction = UserActionProto.newBuilder()
+                    .setUserId(userId)
+                    .setEventId(eventId)
+                    .setActionType(ActionTypeProto.ACTION_LIKE)
+                    .setTimestamp(Timestamp.newBuilder()
+                            .setSeconds(Instant.now().getEpochSecond())
+                            .setNanos(Instant.now().getNano())
+                            .build())
+                    .build();
+
+            // Отправляем через gRPC клиент
+            collectorClient.sendUserAction(userAction);
+            log.debug("Отправлено действие LIKE: userId={}, eventId={}", userId, eventId);
+
+        } catch (Exception e) {
+            log.error("Ошибка отправки действия LIKE через gRPC: userId={}, eventId={}",
+                    userId, eventId, e);
+        }
+    }
+
+    private void sendViewAction(Long userId, Long eventId) {
+        try {
+            UserActionProto userAction = UserActionProto.newBuilder()
+                    .setUserId(userId)
+                    .setEventId(eventId)
+                    .setActionType(ActionTypeProto.ACTION_VIEW)
+                    .setTimestamp(Timestamp.newBuilder()
+                            .setSeconds(Instant.now().getEpochSecond())
+                            .setNanos(Instant.now().getNano())
+                            .build())
+                    .build();
+
+            // Отправляем через gRPC клиент
+            collectorClient.sendUserAction(userAction);
+            log.debug("Отправлено действие VIEW: userId={}, eventId={}", userId, eventId);
+
+        } catch (Exception e) {
+            log.error("Ошибка отправки действия VIEW через gRPC: userId={}, eventId={}",
+                    userId, eventId, e);
+        }
+    }
+
+    private double getEventRating(Long eventId) {
+        try {
+            Stream<RecommendedEventProto> stream = recommendationsClient.getInteractionsCount(eventId);
+            return stream
+                    .findFirst()
+                    .map(RecommendedEventProto::getScore)
+                    .orElse(0.0);
+
+        } catch (Exception e) {
+            log.error("Ошибка получения рейтинга через gRPC: eventId={}", eventId, e);
+            return 0.0;
         }
     }
 
@@ -398,17 +472,6 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
     }
 
-
-    private void hit(HttpServletRequest httpServletRequest) {
-        EndpointHit hitDtoRequest = new EndpointHit(
-                null,
-                "main-server",
-                httpServletRequest.getRequestURI(),
-                httpServletRequest.getRemoteAddr(),
-                LocalDateTime.now()
-        );
-        statClient.saveHit(hitDtoRequest);
-    }
 
     private void checkInitiator(Long userId, Event event) {
         if (!Objects.equals(event.getInitiatorId(), userId)) {

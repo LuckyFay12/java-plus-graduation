@@ -1,9 +1,11 @@
 package ru.practicum.service;
 
+import com.google.protobuf.Timestamp;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.CollectorClient;
 import ru.practicum.client.EventClient;
 import ru.practicum.client.UserClient;
 import ru.practicum.dto.*;
@@ -11,16 +13,18 @@ import ru.practicum.enums.EventState;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
+import ru.practicum.grpc.stats.action.ActionTypeProto;
+import ru.practicum.grpc.stats.action.UserActionProto;
 import ru.practicum.mapper.RequestMapper;
 import ru.practicum.model.ParticipationRequest;
 import ru.practicum.enums.RequestStatus;
 import ru.practicum.repository.RequestRepository;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -31,17 +35,13 @@ public class RequestServiceImpl implements RequestService {
     private final UserClient userClient;
     private final RequestMapper requestMapper;
     private final EventClient eventClient;
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<ParticipationRequest> findById(Long requestId) {
-        return requestRepository.findById(requestId);
-    }
+    private final CollectorClient collectorClient;
 
     @Override
     @Transactional(readOnly = true)
     public ParticipationRequest getById(Long requestId) {
-        return findById(requestId).orElseThrow(() -> new NotFoundException("Запрос с id = %d не найден".formatted(requestId)));
+        return requestRepository.findById(requestId)
+                .orElseThrow(() -> new NotFoundException("Запрос с id = %d не найден".formatted(requestId)));
     }
 
     public ParticipationRequestDto createRequest(Long userId, Long eventId) {
@@ -83,6 +83,8 @@ public class RequestServiceImpl implements RequestService {
             } catch (Exception e) {
                 log.error("Ошибка при обновлении счетчика confirmed_requests", e);
             }
+
+            sendRegisterAction(eventId, userId);
         }
 
         ParticipationRequest savedRequest = requestRepository.save(request);
@@ -177,6 +179,33 @@ public class RequestServiceImpl implements RequestService {
                 .map(requestMapper::toDto)
                 .toList();
         return new EventRequestStatusUpdateResult(confirmedList, regectedList);
+    }
+
+    @Override
+    public Boolean existsByRequesterIdAndEventId(Long requesterId, Long eventId) {
+        return requestRepository.existsByEventIdAndRequesterId(eventId, requesterId);
+    }
+
+    private void sendRegisterAction(Long userId, Long eventId) {
+        try {
+            UserActionProto userAction = UserActionProto.newBuilder()
+                    .setUserId(userId)
+                    .setEventId(eventId)
+                    .setActionType(ActionTypeProto.ACTION_REGISTER)
+                    .setTimestamp(Timestamp.newBuilder()
+                            .setSeconds(Instant.now().getEpochSecond())
+                            .setNanos(Instant.now().getNano())
+                            .build())
+                    .build();
+
+            // Отправляем через gRPC клиент
+            collectorClient.sendUserAction(userAction);
+            log.debug("Отправлено действие REGISTER: userId={}, eventId={}", userId, eventId);
+
+        } catch (Exception e) {
+            log.error("Ошибка отправки действия REGISTER через gRPC: userId={}, eventId={}",
+                    userId, eventId, e);
+        }
     }
 
     private EventState getEventStateSafe(String state) {
