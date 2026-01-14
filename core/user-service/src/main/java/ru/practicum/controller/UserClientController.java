@@ -3,7 +3,7 @@ package ru.practicum.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.client.UserClient;
+import ru.practicum.client.UserOperations;
 import ru.practicum.dto.UserShortDto;
 import ru.practicum.service.UserService;
 
@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/users")
-public class UserClientController implements UserClient {
+public class UserClientController implements UserOperations {
 
     private final UserService userService;
 

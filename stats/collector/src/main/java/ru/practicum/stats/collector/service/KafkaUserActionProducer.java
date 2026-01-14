@@ -1,6 +1,5 @@
 package ru.practicum.stats.collector.service;
 
-import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -45,11 +44,10 @@ public class KafkaUserActionProducer implements AutoCloseable {
         });
     }
 
-    @PreDestroy
+    @Override
     public void close() {
         log.info("Shutting down producer");
         producer.flush();
         producer.destroy();
-
     }
 }

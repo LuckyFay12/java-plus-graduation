@@ -1,4 +1,4 @@
-package ru.practicum.stats.analyzer.service;
+package ru.practicum.stats.analyzer.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +11,7 @@ import ru.practicum.stats.analyzer.model.EventSimilarity;
 import ru.practicum.stats.analyzer.model.Interaction;
 import ru.practicum.stats.analyzer.repository.InteractionRepository;
 import ru.practicum.stats.analyzer.repository.SimilarityRepository;
+import ru.practicum.stats.analyzer.service.RecommendationsService;
 
 import java.util.HashMap;
 import java.util.List;

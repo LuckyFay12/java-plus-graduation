@@ -3,7 +3,7 @@ package ru.practicum.ewm.controller.event;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.client.EventClient;
+import ru.practicum.client.EventOperations;
 import ru.practicum.dto.EventFullDto;
 import ru.practicum.ewm.service.event.EventService;
 
@@ -11,7 +11,7 @@ import ru.practicum.ewm.service.event.EventService;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/events")
-public class EventClientController implements EventClient {
+public class EventController implements EventOperations {
 
     private final EventService eventService;
 

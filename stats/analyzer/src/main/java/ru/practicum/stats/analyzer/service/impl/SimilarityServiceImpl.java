@@ -1,4 +1,4 @@
-package ru.practicum.stats.analyzer.service;
+package ru.practicum.stats.analyzer.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.stats.analyzer.model.EventSimilarity;
 import ru.practicum.stats.analyzer.repository.SimilarityRepository;
+import ru.practicum.stats.analyzer.service.SimilarityService;
 
 @Service
 @Slf4j

@@ -1,4 +1,4 @@
-package ru.practicum.stats.analyzer.service;
+package ru.practicum.stats.analyzer.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,6 +8,7 @@ import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.stats.analyzer.model.Interaction;
 import ru.practicum.stats.analyzer.repository.InteractionRepository;
+import ru.practicum.stats.analyzer.service.UserActionService;
 
 @Service
 @Slf4j

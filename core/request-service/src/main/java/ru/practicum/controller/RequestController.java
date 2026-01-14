@@ -4,14 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.client.RequestClient;
+import ru.practicum.client.RequestOperations;
 import ru.practicum.service.RequestService;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/requests")
-public class RequestClientController implements RequestClient {
+public class RequestController implements RequestOperations {
 
     private final RequestService requestService;
 

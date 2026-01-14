@@ -54,7 +54,8 @@ public class RequestServiceImpl implements RequestService {
                     .formatted(userId, eventId));
         }
 
-        if (!"PUBLISHED".equals(event.getState())) {
+        EventState eventState = getEventStateSafe(event.getState());
+        if (eventState != EventState.PUBLISHED) {
             throw new ConflictException("Нельзя участвовать в неопубликованном событии(eventId = %d)".formatted(eventId));
         }
 
