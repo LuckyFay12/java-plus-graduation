@@ -53,7 +53,7 @@ public class EventFullDto {
     @Size(min = 3, max = 50)
     private String title;
 
-    private Long views;
+    private Double rating;
 
     private Long commentsCount;
 }

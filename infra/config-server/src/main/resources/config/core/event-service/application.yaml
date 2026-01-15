@@ -20,9 +20,6 @@ spring:
       mode: always
       schema-locations: classpath:schema.sql
 
-  stats-server:
-    name: stats-server
-
 logging:
   level:
     "ru.practicum": INFO
@@ -33,3 +30,16 @@ logging:
 
 server:
   port: 0
+
+grpc:
+  client:
+    analyzer:
+      address: 'discovery:///analyzer' # адрес gRPC-сервиса
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+    collector:
+      address: 'discovery:///collector'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext

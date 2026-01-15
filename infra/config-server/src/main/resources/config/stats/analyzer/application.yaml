@@ -1,0 +1,56 @@
+spring:
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5433/stats_db
+    username: postgres
+    password: postgres
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties.hibernate:
+      jdbc.time_zone: UTC
+      format_sql: true
+      temp.use_jdbc_metadata_defaults: false
+    hibernate.ddl-auto: update
+    show-sql: false
+  sql.init.mode: always
+
+grpc:
+  server:
+    port: 0
+  client:
+    hub-router:
+          address: 'static://localhost:59090'
+          negotiation-type: plaintext
+logging:
+  level:
+    ru.yandex.practicum.telemetry: TRACE
+    org:
+      springframework: ERROR
+      springframework.cloud.netflix.eureka: INFO
+      apache.kafka: WARN
+
+
+analyzer:
+  kafka:
+    common-properties:
+      "bootstrap.servers": "localhost:9092"
+      "key.deserializer": "org.apache.kafka.common.serialization.StringDeserializer"
+      "enable.auto.commit": false
+    consumers:
+      - type: UserActionProcessor
+        properties:
+          "value.deserializer": "ru.practicum.kafka.deserializer.UserActionDeserializer"
+          "group.id": "stats.analyzer.action"
+          "auto.offset.reset": "earliest"
+          "enable.auto.commit": "false"
+          "max.poll.records": "10"
+        topics:
+          - "stats.user-actions.v1"
+        poll-timeout: 500ms
+      - type: EventSimilarityProcessor
+        properties:
+          "value.deserializer": "ru.practicum.kafka.deserializer.EventSimilarityDeserializer"
+          "group.id": "stats.analyzer.similarity"
+        topics:
+          - "stats.events-similarity.v1"
+        poll-timeout: 500ms

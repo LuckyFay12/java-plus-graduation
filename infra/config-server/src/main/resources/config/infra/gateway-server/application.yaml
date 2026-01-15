@@ -43,7 +43,6 @@ spring:
           predicates:
             - Path=/events/**, /users/{user-id}/events/**, /compilations/**, /categories/**
 
-
 server:
   port: 8080
 

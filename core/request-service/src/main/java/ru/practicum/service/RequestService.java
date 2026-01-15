@@ -8,10 +8,8 @@ import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.model.ParticipationRequest;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface RequestService {
-    Optional<ParticipationRequest> findById(Long requestId);
 
     ParticipationRequest getById(Long requestId);
 
@@ -25,4 +23,6 @@ public interface RequestService {
 
     EventRequestStatusUpdateResult updateRequest(@Valid EventRequestStatusUpdateRequest request,
                                                  @Positive Long userId, @Positive Long eventId);
+
+    Boolean existsByRequesterIdAndEventId(Long requesterId, Long eventId);
 }

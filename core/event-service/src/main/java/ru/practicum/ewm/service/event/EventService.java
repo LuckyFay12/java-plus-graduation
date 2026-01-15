@@ -1,12 +1,12 @@
 package ru.practicum.ewm.service.event;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Positive;
 import ru.practicum.dto.*;
 import ru.practicum.ewm.dto.event.*;
 import ru.practicum.ewm.entity.event.Event;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface EventService {
 
@@ -25,13 +25,15 @@ public interface EventService {
     List<EventShortDto> getAll(EventPublicFilter publicFilter, Integer from, Integer size,
                                HttpServletRequest httpServletRequest);
 
-    EventFullDto getById(Long eventId, HttpServletRequest httpServletRequest);
-
-    Optional<Event> findById(Long eventId);
+    EventFullDto getById(Long eventId, Long userId, HttpServletRequest httpServletRequest);
 
     Event getById(Long eventId);
 
     EventFullDto getByEventId(Long eventId);
 
     void incrementConfirmedRequests(Long eventId, int count);
+
+    List<EventShortDto> getRecommendations(long userId, int maxResult);
+
+    void addLike(@Positive Long eventId, long userId);
 }

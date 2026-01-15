@@ -68,8 +68,8 @@ public class Event {
     @Column(name = "title", nullable = false, length = 120)
     private String title;
 
-    @Column(name = "views")
-    private Long views = 0L;
+    @Column(name = "rating")
+    private Double rating;
 
     @ManyToMany(mappedBy = "events")
     private List<Compilation> compilations = new ArrayList<>();
